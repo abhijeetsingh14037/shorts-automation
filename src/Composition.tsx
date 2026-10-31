@@ -1,25 +1,42 @@
-import { CalculateMetadataFunction, Composition } from "remotion";
+import { Sequence, OffthreadVideo, Audio, AbsoluteFill, staticFile } from "remotion";
 
-type Props = {};
-
-const calculateMetadata: CalculateMetadataFunction<Props> = () => {
-  return {};
+type ClipType = {
+  src: string;
+  start: number;
+  length: number;
 };
 
-export const MyComposition = () => {
+type Props = {
+  clips: ClipType[];
+  audioUrl: string;
+};
+
+export const ShortsComponent: React.FC<Props> = ({ clips, audioUrl }) => {
+  const fps = 30;
+
   return (
-    <Composition
-      id="MyComp"
-      component={MyComponent}
-      durationInFrames={60}
-      fps={30}
-      width={1280}
-      height={720}
-      calculateMetadata={calculateMetadata}
-    />
-  );
-};
+    <AbsoluteFill style={{ backgroundColor: "black" }}>
+      {clips.map((clip, index) => {
+        const startFrame = Math.round(clip.start * fps);
+        const durationFrames = Math.round(clip.length * fps);
 
-export const MyComponent: React.FC<Props> = () => {
-  return null;
+        return (
+          <Sequence key={index} from={startFrame} durationInFrames={durationFrames}>
+            <OffthreadVideo
+              src={clip.src}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+              }}
+            />
+          </Sequence>
+        );
+      })}
+
+      {audioUrl ? (
+        <Audio src={audioUrl.startsWith("http") ? audioUrl : staticFile(audioUrl)} />
+      ) : null}
+    </AbsoluteFill>
+  );
 };
